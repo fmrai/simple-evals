@@ -4,7 +4,7 @@ import pandas as pd
 from . import common
 from .drop_eval import DropEval
 from .gpqa_eval import GPQAEval
-from .humaneval_eval import HumanEval
+# from .humaneval_eval import HumanEval
 from .math_eval import MathEval
 from .mgsm_eval import MGSMEval
 from .mmlu_eval import MMLUEval
@@ -15,7 +15,8 @@ from .sampler.chat_completion_sampler import (
     ChatCompletionSampler,
 )
 from .sampler.o_chat_completion_sampler import OChatCompletionSampler
-from .sampler.claude_sampler import ClaudeCompletionSampler, CLAUDE_SYSTEM_MESSAGE_LMSYS
+from .sampler.vllm_sampler import VLLMSampler
+# from .sampler.claude_sampler import ClaudeCompletionSampler, CLAUDE_SYSTEM_MESSAGE_LMSYS
 
 
 def main():
@@ -95,10 +96,10 @@ def main():
             max_tokens=2048,
         ), 
         # claude models:
-        "claude-3-opus-20240229_empty": ClaudeCompletionSampler(
-            model="claude-3-opus-20240229",
-            system_message=CLAUDE_SYSTEM_MESSAGE_LMSYS,
-        ),
+        # "claude-3-opus-20240229_empty": ClaudeCompletionSampler(
+        #     model="claude-3-opus-20240229",
+        #     system_message=CLAUDE_SYSTEM_MESSAGE_LMSYS,
+        # ),
     }
 
     if args.list_models:
@@ -108,10 +109,11 @@ def main():
         return
 
     if args.model:
-        if args.model not in models:
-            print(f"Error: Model '{args.model}' not found.")
-            return
-        models = {args.model: models[args.model]}
+        if args.model in models:
+            models = {args.model: models[args.model]}
+        else:
+            # use vllm sampler
+            models = {args.model: VLLMSampler(model=args.model)}
 
     grading_sampler = ChatCompletionSampler(model="gpt-4o")
     equality_checker = ChatCompletionSampler(model="gpt-4-turbo-preview")
@@ -142,8 +144,8 @@ def main():
                     num_examples=10 if debug_mode else num_examples,
                     train_samples_per_prompt=3,
                 )
-            case "humaneval":
-                return HumanEval(num_examples=10 if debug_mode else num_examples)
+            # case "humaneval":
+            #     return HumanEval(num_examples=10 if debug_mode else num_examples)
             case "simpleqa":
                 return SimpleQAEval(
                     grader_model=grading_sampler,
@@ -154,7 +156,8 @@ def main():
 
     evals = {
         eval_name: get_evals(eval_name, args.debug)
-        for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop", "humaneval"]
+        # for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop"]
+        for eval_name in ["simpleqa"]
     }
     print(evals)
     debug_suffix = "_DEBUG" if args.debug else ""

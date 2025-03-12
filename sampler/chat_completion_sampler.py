@@ -1,11 +1,15 @@
 import base64
 import time
 from typing import Any
+from dotenv import load_dotenv
+import os
 
 import openai
 from openai import OpenAI
 
-from ..types import MessageList, SamplerBase
+from ..eval_types import MessageList, SamplerBase
+
+load_dotenv()
 
 OPENAI_SYSTEM_MESSAGE_API = "You are a helpful assistant."
 OPENAI_SYSTEM_MESSAGE_CHATGPT = (
