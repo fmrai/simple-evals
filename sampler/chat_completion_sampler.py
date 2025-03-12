@@ -17,6 +17,20 @@ OPENAI_SYSTEM_MESSAGE_CHATGPT = (
     + "\nKnowledge cutoff: 2023-12\nCurrent date: 2024-04-01"
 )
 
+def get_client(provider):
+    api_key = os.getenv(f"{provider.upper()}_API_KEY")
+    match provider:
+        case "openai":
+            base_url = None
+        case "google":
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        case _:
+            raise ValueError(f"Invalid provider: {provider}")
+    client = OpenAI(
+        api_key=api_key,
+        base_url=base_url
+    )
+    return client
 
 class ChatCompletionSampler(SamplerBase):
     """
@@ -26,13 +40,12 @@ class ChatCompletionSampler(SamplerBase):
     def __init__(
         self,
         model: str = "gpt-3.5-turbo",
+        provider: str = "openai",
         system_message: str | None = None,
         temperature: float = 0.5,
         max_tokens: int = 1024,
     ):
-        self.api_key_name = "OPENAI_API_KEY"
-        self.client = OpenAI()
-        # using api_key=os.environ.get("OPENAI_API_KEY")  # please set your API_KEY
+        self.client = get_client(provider)
         self.model = model
         self.system_message = system_message
         self.temperature = temperature

@@ -115,7 +115,7 @@ def main():
             # use vllm sampler
             models = {args.model: VLLMSampler(model=args.model)}
 
-    grading_sampler = ChatCompletionSampler(model="gpt-4o")
+    grading_sampler = ChatCompletionSampler(model="gemini-2.0-flash", provider="google")
     equality_checker = ChatCompletionSampler(model="gpt-4-turbo-preview")
     # ^^^ used for fuzzy matching, just for math
 
