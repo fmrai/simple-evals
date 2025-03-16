@@ -1,5 +1,6 @@
 import json
 import argparse
+import os
 import pandas as pd
 from . import common
 from .drop_eval import DropEval
@@ -163,9 +164,18 @@ def main():
     debug_suffix = "_DEBUG" if args.debug else ""
     print(debug_suffix)
     mergekey2resultpath = {}
+
+    # remove file if it exists
+    if os.path.exists("/workspace/out/messages.json"):
+        os.remove("/workspace/out/messages.json")
+    # create file if it doesn't exist
+    if not os.path.exists("/workspace/out/messages.json"):
+        with open("/workspace/out/messages.json", "w") as f:
+            pass
+        
     for model_name, sampler in models.items():
         for eval_name, eval_obj in evals.items():
-            result = eval_obj(sampler)
+            result = eval_obj(sampler, return_message_list=True)
             # ^^^ how to use a sampler
             file_stem = f"{eval_name}_{model_name.replace('/', '_')}"
             report_filename = f"/tmp/{file_stem}{debug_suffix}.html"

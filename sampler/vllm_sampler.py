@@ -30,7 +30,7 @@ class VLLMSampler(SamplerBase):
     def _pack_message(self, role: str, content: Any):
         return {"role": str(role), "content": content}
 
-    def __call__(self, message_list: MessageList) -> str:
+    def __call__(self, message_list: MessageList, return_message_list: bool = False) -> str | tuple[str, list]:
         if self.system_message:
             message_list = [self._pack_message("system", self.system_message)] + message_list
         
@@ -43,8 +43,12 @@ class VLLMSampler(SamplerBase):
                     messages=message_list,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
+                    logprobs=True,
                 )
-                return response.choices[0].message.content
+                message = response.choices[0].message
+                response_message = {'role': message.role, 'content': message.content}
+                message_list = message_list + [response_message]
+                return message.content, message_list if return_message_list else message.content
             
             except Exception as e:
                 exception_backoff = 2**trial  # exponential back off
