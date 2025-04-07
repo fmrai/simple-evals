@@ -5,6 +5,8 @@ import pandas as pd
 from . import common
 from .drop_eval import DropEval
 from .gpqa_eval import GPQAEval
+from .wmdp_eval import WMDPEval
+
 # from .humaneval_eval import HumanEval
 from .math_eval import MathEval
 from .mgsm_eval import MGSMEval
@@ -95,7 +97,13 @@ def main():
             model="gpt-4.5-preview-2025-02-27",
             system_message=OPENAI_SYSTEM_MESSAGE_API,
             max_tokens=2048,
-        ), 
+        ),
+        "gemini-2.0-flash": ChatCompletionSampler(
+            model="gemini-2.0-flash",
+            provider="google",
+            system_message=OPENAI_SYSTEM_MESSAGE_API,
+            max_tokens=2048,
+        ),
         # claude models:
         # "claude-3-opus-20240229_empty": ClaudeCompletionSampler(
         #     model="claude-3-opus-20240229",
@@ -128,6 +136,18 @@ def main():
         match eval_name:
             case "mmlu":
                 return MMLUEval(num_examples=1 if debug_mode else num_examples)
+            case "wmdp-bio":
+                return WMDPEval(
+                    subject="wmdp-bio", num_examples=1 if debug_mode else num_examples
+                )
+            case "wmdp-chem":
+                return WMDPEval(
+                    subject="wmdp-chem", num_examples=1 if debug_mode else num_examples
+                )
+            case "wmdp-cyber":
+                return WMDPEval(
+                    subject="wmdp-cyber", num_examples=1 if debug_mode else num_examples
+                )
             case "math":
                 return MathEval(
                     equality_checker=equality_checker,
@@ -158,7 +178,7 @@ def main():
     evals = {
         eval_name: get_evals(eval_name, args.debug)
         # for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop"]
-        for eval_name in ["simpleqa"]
+        for eval_name in ["wmdp-bio", "wmdp-chem", "wmdp-cyber"]
     }
     print(evals)
     debug_suffix = "_DEBUG" if args.debug else ""
@@ -166,16 +186,16 @@ def main():
     mergekey2resultpath = {}
 
     # remove file if it exists
-    if os.path.exists("/workspace/out/messages.json"):
-        os.remove("/workspace/out/messages.json")
+    # if os.path.exists("/workspace/out/messages.json"):
+    #     os.remove("/workspace/out/messages.json")
     # create file if it doesn't exist
-    if not os.path.exists("/workspace/out/messages.json"):
-        with open("/workspace/out/messages.json", "w") as f:
-            pass
-        
+    # if not os.path.exists("/workspace/out/messages.json"):
+    #     with open("/workspace/out/messages.json", "w") as f:
+    #         pass
+
     for model_name, sampler in models.items():
         for eval_name, eval_obj in evals.items():
-            result = eval_obj(sampler, return_message_list=True)
+            result = eval_obj(sampler)
             # ^^^ how to use a sampler
             file_stem = f"{eval_name}_{model_name.replace('/', '_')}"
             report_filename = f"/tmp/{file_stem}{debug_suffix}.html"
