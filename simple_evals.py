@@ -189,7 +189,6 @@ def main():
 
     evals = {
         eval_name: get_evals(eval_name, args.debug)
-
         for eval_name in args.eval
     }
     print(evals)
