@@ -197,6 +197,7 @@ def aggregate_results(
         for stat in stats:
             key = name if stat == "mean" else f"{name}:{stat}"
             final_metrics[key] = _compute_stat(values, stat)
+            
     return EvalResult(
         score=final_metrics.pop("score", None),
         metrics=final_metrics,
