@@ -2,23 +2,25 @@ import json
 import argparse
 import os
 import pandas as pd
-from . import common
-from .drop_eval import DropEval
-from .gpqa_eval import GPQAEval
-from .wmdp_eval import WMDPEval
+import common
+from wmdp_eval import WMDPEval
+from drop_eval import DropEval
+from gpqa_eval import GPQAEval
 
 # from .humaneval_eval import HumanEval
-from .math_eval import MathEval
-from .mgsm_eval import MGSMEval
-from .mmlu_eval import MMLUEval
-from .simpleqa_eval import SimpleQAEval
-from .sampler.chat_completion_sampler import (
+from math_eval import MathEval
+from mgsm_eval import MGSMEval
+from mmlu_eval import MMLUEval
+from bbq_eval import BBQEval
+from simpleqa_eval import SimpleQAEval
+from sampler.chat_completion_sampler import (
     OPENAI_SYSTEM_MESSAGE_API,
     OPENAI_SYSTEM_MESSAGE_CHATGPT,
     ChatCompletionSampler,
 )
-from .sampler.o_chat_completion_sampler import OChatCompletionSampler
-from .sampler.vllm_sampler import VLLMSampler
+from sampler.o_chat_completion_sampler import OChatCompletionSampler
+from sampler.vllm_sampler import VLLMSampler
+
 # from .sampler.claude_sampler import ClaudeCompletionSampler, CLAUDE_SYSTEM_MESSAGE_LMSYS
 
 
@@ -33,6 +35,12 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Run in debug mode")
     parser.add_argument(
         "--examples", type=int, help="Number of examples to use (overrides default)"
+    )
+    parser.add_argument(
+        "--eval",
+        nargs="+",  # One or more values
+        help="Select one or more evals by name",
+        required=True
     )
 
     args = parser.parse_args()
@@ -172,26 +180,22 @@ def main():
                     grader_model=grading_sampler,
                     num_examples=10 if debug_mode else num_examples,
                 )
+            case "bbq":
+                return BBQEval(
+                    num_examples=1 if debug_mode else num_examples,
+                )
             case _:
                 raise Exception(f"Unrecognized eval type: {eval_name}")
 
     evals = {
         eval_name: get_evals(eval_name, args.debug)
-        # for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop"]
-        for eval_name in ["wmdp-bio", "wmdp-chem", "wmdp-cyber"]
+
+        for eval_name in args.eval
     }
     print(evals)
     debug_suffix = "_DEBUG" if args.debug else ""
     print(debug_suffix)
     mergekey2resultpath = {}
-
-    # remove file if it exists
-    # if os.path.exists("/workspace/out/messages.json"):
-    #     os.remove("/workspace/out/messages.json")
-    # create file if it doesn't exist
-    # if not os.path.exists("/workspace/out/messages.json"):
-    #     with open("/workspace/out/messages.json", "w") as f:
-    #         pass
 
     for model_name, sampler in models.items():
         for eval_name, eval_obj in evals.items():
@@ -209,6 +213,7 @@ def main():
                 f.write(json.dumps(metrics, indent=2))
             print(f"Writing results to {result_filename}")
             mergekey2resultpath[f"{file_stem}"] = result_filename
+            
     merge_metrics = []
     for eval_model_name, result_filename in mergekey2resultpath.items():
         try:
@@ -232,3 +237,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

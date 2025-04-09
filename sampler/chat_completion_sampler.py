@@ -7,7 +7,7 @@ import os
 import openai
 from openai import OpenAI
 
-from ..eval_types import MessageList, SamplerBase
+from eval_types import MessageList, SamplerBase
 
 load_dotenv()
 
@@ -17,8 +17,9 @@ OPENAI_SYSTEM_MESSAGE_CHATGPT = (
     + "\nKnowledge cutoff: 2023-12\nCurrent date: 2024-04-01"
 )
 
+
 def get_client(provider):
-    api_key = os.getenv(f"{provider.upper()}_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY")
     match provider:
         case "openai":
             base_url = None
@@ -26,11 +27,9 @@ def get_client(provider):
             base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
         case _:
             raise ValueError(f"Invalid provider: {provider}")
-    client = OpenAI(
-        api_key=api_key,
-        base_url=base_url
-    )
+    client = OpenAI(api_key=api_key, base_url=base_url)
     return client
+
 
 class ChatCompletionSampler(SamplerBase):
     """
@@ -53,7 +52,11 @@ class ChatCompletionSampler(SamplerBase):
         self.image_format = "url"
 
     def _handle_image(
-        self, image: str, encoding: str = "base64", format: str = "png", fovea: int = 768
+        self,
+        image: str,
+        encoding: str = "base64",
+        format: str = "png",
+        fovea: int = 768,
     ):
         new_image = {
             "type": "image_url",
@@ -71,7 +74,9 @@ class ChatCompletionSampler(SamplerBase):
 
     def __call__(self, message_list: MessageList) -> str:
         if self.system_message:
-            message_list = [self._pack_message("system", self.system_message)] + message_list
+            message_list = [
+                self._pack_message("system", self.system_message)
+            ] + message_list
         trial = 0
         while True:
             try:
