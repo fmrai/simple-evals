@@ -3,6 +3,7 @@ import argparse
 import os
 import pandas as pd
 import common
+from wmdp_eval import WMDPEval
 from drop_eval import DropEval
 from gpqa_eval import GPQAEval
 
@@ -105,11 +106,11 @@ def main():
             system_message=OPENAI_SYSTEM_MESSAGE_API,
             max_tokens=2048,
         ),
-        "gemini": ChatCompletionSampler(
+        "gemini-2.0-flash": ChatCompletionSampler(
             model="gemini-2.0-flash",
+            provider="google",
             system_message=OPENAI_SYSTEM_MESSAGE_API,
             max_tokens=2048,
-            provider="google",
         ),
         # claude models:
         # "claude-3-opus-20240229_empty": ClaudeCompletionSampler(
@@ -143,6 +144,18 @@ def main():
         match eval_name:
             case "mmlu":
                 return MMLUEval(num_examples=1 if debug_mode else num_examples)
+            case "wmdp-bio":
+                return WMDPEval(
+                    subject="wmdp-bio", num_examples=1 if debug_mode else num_examples
+                )
+            case "wmdp-chem":
+                return WMDPEval(
+                    subject="wmdp-chem", num_examples=1 if debug_mode else num_examples
+                )
+            case "wmdp-cyber":
+                return WMDPEval(
+                    subject="wmdp-cyber", num_examples=1 if debug_mode else num_examples
+                )
             case "math":
                 return MathEval(
                     equality_checker=equality_checker,
@@ -176,6 +189,7 @@ def main():
 
     evals = {
         eval_name: get_evals(eval_name, args.debug)
+
         for eval_name in args.eval
     }
     print(evals)
