@@ -96,8 +96,7 @@ class BBQEval(Eval):
                 )
             ]
             response_text = normalize_response(sampler(prompt_messages))
-        
-            # Extract answer from response
+
             pred = response_text.strip().lower()
 
             if "answer:" in pred:
