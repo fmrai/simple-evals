@@ -35,6 +35,12 @@ def main():
     parser.add_argument(
         "--examples", type=int, help="Number of examples to use (overrides default)"
     )
+    parser.add_argument(
+        "--eval",
+        nargs="+",  # One or more values
+        help="Select one or more evals by name",
+        required=True
+    )
 
     args = parser.parse_args()
 
@@ -161,7 +167,7 @@ def main():
                     grader_model=grading_sampler,
                     num_examples=10 if debug_mode else num_examples,
                 )
-            case "bbq_eval":
+            case "bbq":
                 return BBQEval(
                     num_examples=1 if debug_mode else num_examples,
                 )
@@ -171,7 +177,7 @@ def main():
     evals = {
         eval_name: get_evals(eval_name, args.debug)
         # for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop"]
-        for eval_name in ["bbq_eval"]
+        for eval_name in args.eval
     }
     print(evals)
     debug_suffix = "_DEBUG" if args.debug else ""
@@ -188,26 +194,24 @@ def main():
 
     for model_name, sampler in models.items():
         for eval_name, eval_obj in evals.items():
-            result = eval_obj(sampler)  # , return_message_list=True)
+            result = eval_obj(sampler)
             # ^^^ how to use a sampler
             file_stem = f"{eval_name}_{model_name.replace('/', '_')}"
             report_filename = f"/tmp/{file_stem}{debug_suffix}.html"
-            # print(f"Writing report to {report_filename}")
-            # with open(report_filename, "w") as fh:
-            #     fh.write(common.make_report(result))
-            print("here the result", result)
+            print(f"Writing report to {report_filename}")
+            with open(report_filename, "w") as fh:
+                fh.write(common.make_report(result))
             metrics = result.metrics | {"score": result.score}
-            # print(metrics)
+            print(metrics)
             result_filename = f"/tmp/{file_stem}{debug_suffix}.json"
-            # with open(result_filename, "w") as f:
-            #     f.write(json.dumps(metrics, indent=2))
-            # print(f"Writing results to {result_filename}")
+            with open(result_filename, "w") as f:
+                f.write(json.dumps(metrics, indent=2))
+            print(f"Writing results to {result_filename}")
             mergekey2resultpath[f"{file_stem}"] = result_filename
     merge_metrics = []
     for eval_model_name, result_filename in mergekey2resultpath.items():
         try:
-            pass
-            # result = json.load(open(result_filename, "r+"))
+            result = json.load(open(result_filename, "r+"))
         except Exception as e:
             print(e, result_filename)
             continue
@@ -227,3 +231,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
