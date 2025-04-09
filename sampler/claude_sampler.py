@@ -2,7 +2,7 @@ import time
 
 import anthropic
 
-from ..eval_types import MessageList, SamplerBase
+from eval_types import MessageList, SamplerBase
 
 CLAUDE_SYSTEM_MESSAGE_LMSYS = (
     "The assistant is Claude, created by Anthropic. The current date is "
@@ -43,7 +43,11 @@ class ClaudeCompletionSampler(SamplerBase):
         self.image_format = "base64"
 
     def _handle_image(
-        self, image: str, encoding: str = "base64", format: str = "png", fovea: int = 768
+        self,
+        image: str,
+        encoding: str = "base64",
+        format: str = "png",
+        fovea: int = 768,
     ):
         new_image = {
             "type": "image",

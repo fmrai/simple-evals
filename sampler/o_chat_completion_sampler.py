@@ -4,7 +4,7 @@ from typing import Any
 import openai
 from openai import OpenAI
 
-from ..eval_types import MessageList, SamplerBase
+from eval_types import MessageList, SamplerBase
 
 
 class OChatCompletionSampler(SamplerBase):
@@ -26,7 +26,11 @@ class OChatCompletionSampler(SamplerBase):
         self.reasoning_effort = reasoning_effort
 
     def _handle_image(
-        self, image: str, encoding: str = "base64", format: str = "png", fovea: int = 768
+        self,
+        image: str,
+        encoding: str = "base64",
+        format: str = "png",
+        fovea: int = 768,
     ):
         new_image = {
             "type": "image_url",
