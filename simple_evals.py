@@ -176,21 +176,12 @@ def main():
 
     evals = {
         eval_name: get_evals(eval_name, args.debug)
-        # for eval_name in ["simpleqa", "mmlu", "math", "gpqa", "mgsm", "drop"]
         for eval_name in args.eval
     }
     print(evals)
     debug_suffix = "_DEBUG" if args.debug else ""
     print(debug_suffix)
     mergekey2resultpath = {}
-
-    # remove file if it exists
-    # if os.path.exists("/workspace/out/messages.json"):
-    #     os.remove("/workspace/out/messages.json")
-    # # create file if it doesn't exist
-    # if not os.path.exists("/workspace/out/messages.json"):
-    #     with open("/workspace/out/messages.json", "w") as f:
-    #         pass
 
     for model_name, sampler in models.items():
         for eval_name, eval_obj in evals.items():
@@ -208,6 +199,7 @@ def main():
                 f.write(json.dumps(metrics, indent=2))
             print(f"Writing results to {result_filename}")
             mergekey2resultpath[f"{file_stem}"] = result_filename
+            
     merge_metrics = []
     for eval_model_name, result_filename in mergekey2resultpath.items():
         try:

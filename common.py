@@ -150,7 +150,6 @@ HTML_JINJA = """
 
 
 def format_multichoice_question(row):
-    print(row)
     return QUERY_TEMPLATE_MULTICHOICE.format(**row)
 
 
