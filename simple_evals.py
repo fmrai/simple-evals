@@ -128,9 +128,11 @@ def main():
     if args.model:
         if args.model in models:
             models = {args.model: models[args.model]}
-        else:
+        elif args.model.startswith("vllm_"):
             # use vllm sampler
-            models = {args.model: VLLMSampler(model=args.model)}
+            model = args.model.split("_")[1]
+            server_url = args.model.split("_")[2]
+            models = {args.model: VLLMSampler(model=model, server_url=server_url)}
 
     grading_sampler = ChatCompletionSampler(model="gemini-2.0-flash", provider="google")
     equality_checker = ChatCompletionSampler(model="gpt-4-turbo-preview")

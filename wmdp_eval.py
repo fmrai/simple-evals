@@ -1,8 +1,8 @@
 import re
 from datasets import load_dataset
-from .eval_types import Eval, EvalResult, SamplerBase, SingleEvalResult
-from . import common
-from .common import (
+from eval_types import Eval, EvalResult, SamplerBase, SingleEvalResult
+import common
+from common import (
     ANSWER_PATTERN_MULTICHOICE,
     normalize_extracted_answer,
     normalize_response,
