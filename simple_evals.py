@@ -1,5 +1,6 @@
 import json
-import argparse
+import hydra
+from omegaconf import DictConfig, OmegaConf
 import os
 import pandas as pd
 import common
@@ -13,6 +14,7 @@ from mgsm_eval import MGSMEval
 from mmlu_eval import MMLUEval
 from bbq_eval import BBQEval
 from simpleqa_eval import SimpleQAEval
+from polygraph_eval import PolygraphEval
 from sampler.chat_completion_sampler import (
     OPENAI_SYSTEM_MESSAGE_API,
     OPENAI_SYSTEM_MESSAGE_CHATGPT,
@@ -24,27 +26,7 @@ from sampler.vllm_sampler import VLLMSampler
 # from .sampler.claude_sampler import ClaudeCompletionSampler, CLAUDE_SYSTEM_MESSAGE_LMSYS
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run sampling and evaluations using different samplers and evaluations."
-    )
-    parser.add_argument(
-        "--list-models", action="store_true", help="List available models"
-    )
-    parser.add_argument("--model", type=str, help="Select a model by name")
-    parser.add_argument("--debug", action="store_true", help="Run in debug mode")
-    parser.add_argument(
-        "--examples", type=int, help="Number of examples to use (overrides default)"
-    )
-    parser.add_argument(
-        "--eval",
-        nargs="+",  # One or more values
-        help="Select one or more evals by name",
-        required=True
-    )
-
-    args = parser.parse_args()
-
+def main(cfg: DictConfig):
     models = {
         # chatgpt models:
         "gpt-4o-2024-11-20_assistant": ChatCompletionSampler(
@@ -119,28 +101,26 @@ def main():
         # ),
     }
 
-    if args.list_models:
+    if cfg.list_models:
         print("Available models:")
         for model_name in models.keys():
             print(f" - {model_name}")
         return
 
-    if args.model:
-        if args.model in models:
-            models = {args.model: models[args.model]}
-        elif args.model.startswith("vllm_"):
-            # use vllm sampler
-            model = args.model.split("_")[1]
-            server_url = args.model.split("_")[2]
-            models = {args.model: VLLMSampler(model=model, server_url=server_url)}
+    if cfg.vllm:
+        models = {cfg.model: VLLMSampler(model=cfg.model, server_url=cfg.server_url)}
 
+    if cfg.model:
+        if cfg.model in models:
+            models = {cfg.model: models[cfg.model]}
+    
     grading_sampler = ChatCompletionSampler(model="gemini-2.0-flash", provider="google")
     equality_checker = ChatCompletionSampler(model="gpt-4-turbo-preview")
     # ^^^ used for fuzzy matching, just for math
 
     def get_evals(eval_name, debug_mode):
         num_examples = (
-            args.examples if args.examples is not None else (5 if debug_mode else None)
+            cfg.examples if cfg.examples is not None else (5 if debug_mode else None)
         )
         # Set num_examples = None to reproduce full evals
         match eval_name:
@@ -186,15 +166,19 @@ def main():
                 return BBQEval(
                     num_examples=1 if debug_mode else num_examples,
                 )
+            case "polygraph":
+                return PolygraphEval(
+                    num_examples=1 if debug_mode else num_examples, dataset_path=cfg.dataset_path
+                )
             case _:
                 raise Exception(f"Unrecognized eval type: {eval_name}")
 
     evals = {
-        eval_name: get_evals(eval_name, args.debug)
-        for eval_name in args.eval
+        eval_name: get_evals(eval_name, cfg.debug)
+        for eval_name in cfg.eval
     }
     print(evals)
-    debug_suffix = "_DEBUG" if args.debug else ""
+    debug_suffix = "_DEBUG" if cfg.debug else ""
     print(debug_suffix)
     mergekey2resultpath = {}
 
@@ -236,7 +220,12 @@ def main():
     return merge_metrics
 
 
+@hydra.main(version_base=None, config_path="config", config_name="config")
+def run(cfg: DictConfig):
+    main(cfg)
+
+
 if __name__ == "__main__":
-    main()
+    run()
 
 

@@ -1,0 +1,8 @@
+# Default config for simple_evals.py using Hydra
+# All options previously handled by argparse are now here
+
+list_models: false  # Set to true to list available models
+model: null         # Model name to use (string), e.g. 'gpt-4o-2024-11-20_assistant'
+debug: false        # Run in debug mode (fewer examples)
+examples: null      # Number of examples to use (int, overrides default)
+eval: ["mmlu"]     # List of evals to run, e.g. ["mmlu", "math", "simpleqa"] 

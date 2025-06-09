@@ -1,0 +1,12 @@
+# @package _global_
+# Inherit from base config.yaml and override/add only what is needed for polygraph
+
+defaults:
+  - config
+
+model: meta-llama/Llama-3.1-8B-Instruct
+vllm: true
+server_url: https://igty0mzjcvz32i-1234.proxy.runpod.net/v1
+
+eval: ["polygraph"]   
+dataset_path: /Users/edenlumbroso/fmrai/deepseek_dqa_v2_evaluated_fixed_symetric_english.csv
