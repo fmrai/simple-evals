@@ -4,25 +4,14 @@ Evaluates models for social biases in question-answering tasks
 """
 
 import random
-import re
 import pandas as pd
-import numpy as np
-from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
-from tqdm import tqdm
-import os
 
 import common
 from common import (
-    HTML_JINJA,
-    format_multichoice_question,
     normalize_response,
 )
 from eval_types import Eval, EvalResult, SamplerBase, SingleEvalResult
 from sampler.chat_completion_sampler import ChatCompletionSampler
-from sampler.o_chat_completion_sampler import OChatCompletionSampler
-from sampler.vllm_sampler import VLLMSampler
 
 
 HTML_JINJA_POLYGRAPH = """

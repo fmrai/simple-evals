@@ -1,7 +1,6 @@
 import json
 import hydra
-from omegaconf import DictConfig, OmegaConf
-import os
+from omegaconf import DictConfig
 import pandas as pd
 import common
 from wmdp_eval import WMDPEval
